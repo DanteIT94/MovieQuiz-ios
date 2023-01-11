@@ -74,7 +74,6 @@ final class MovieQuizViewController: UIViewController {
                                        message: result.text,
                                        preferredStyle: .alert)
         let action = UIAlertAction(title: result.buttonText, style: .default, handler: { _ in self.currentQuestionIndex = 0
-          // вот этот код с переключением индекса и показом первого вопроса надо будет написать тут
             self.correctAnswers = 0
             let firstQuestionsAgain = self.questions[self.currentQuestionIndex]
             let viewModel = self.convert(model: firstQuestionsAgain)
@@ -104,10 +103,6 @@ final class MovieQuizViewController: UIViewController {
         imageLabel.layer.borderWidth = 8 // толщина рамки
         imageLabel.layer.borderColor = isCorrect ? UIColor.YPGreen.cgColor : UIColor.YPRed.cgColor
         imageLabel.layer.cornerRadius = 6 // радиус скругления углов рамки
-        /*if currentQuestion.correctAnswer == true {
-            correctAnswers += 1
-        } else {
-        }*/
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionOrResult()
         }

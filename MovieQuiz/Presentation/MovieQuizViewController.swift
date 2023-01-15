@@ -45,6 +45,7 @@ final class MovieQuizViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        imageLabel.layer.cornerRadius = 20
         let viewModel = convert(model: currentQuestion)
         show(quiz: viewModel)
         yesButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)

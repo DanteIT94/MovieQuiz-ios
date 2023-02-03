@@ -1,53 +1,30 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Lifecycle
     
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var noButton: UIButton!
+    
+    private var correctAnswers:Int = 0
     
     @IBOutlet private var imageLabel: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
     
     private var currentQuestionIndex: Int = 0
-    private lazy var currentQuestion = questions[currentQuestionIndex]
-    private var correctAnswers:Int = 0
+    private let questionsAmount: Int = 10 //общее колличество вопросов квиза
+    private var questionFactory: QuestionFactoryProtocol? //"Фабрика вопросов" к которой наш контроллер будет обращаться за вопросами.
+    //Для использования "Фабрики" - применяем "Композицию". Так мы сами создали экземпляр фабрики, который будем использовать.
+    private var currentQuestion: QuizQuestion? //Текущий вопрос, который видит пользователь
     
-    struct QuizStepViewModel {
-        let image: UIImage
-        let question: String
-        let questionNumber: String
-    }
-    struct QuizResultsViewModel {
-        let title: String
-        let text: String
-        let buttonText: String
-    }
-    struct QuizQuestion {
-        let image: String
-        let text: String
-        let correctAnswer: Bool
-    }
-    
-    private let questions: [QuizQuestion] = [
-        QuizQuestion(image: "The Godfather", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "The Dark Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "Kill Bill", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "The Avengers", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "Deadpool", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "The Green Knight", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
-        QuizQuestion(image: "Old", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
-        QuizQuestion(image: "The Ice Age Adventures of Buck Wild", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
-        QuizQuestion(image: "Tesla", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false),
-        QuizQuestion(image: "Vivarium", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: false)
-    ]
-    
+    //private lazy var currentQuestion = questions[currentQuestionIndex]
+
     override func viewDidLoad() {
         super.viewDidLoad()
         imageLabel.layer.cornerRadius = 20
-        let viewModel = convert(model: currentQuestion)
-        show(quiz: viewModel)
+        questionFactory = QuestionFactory(delegate: self)
+        questionFactory?.requestNextQuestion()
         yesButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         yesButton.addTarget(self, action: #selector(yesButtonPressed), for: .touchDown)
         yesButton.addTarget(self, action: #selector(yesButtonReleased), for: [.touchUpInside, .touchUpOutside])
@@ -55,15 +32,33 @@ final class MovieQuizViewController: UIViewController {
         noButton.addTarget(self, action: #selector(noButtonPressed), for: .touchDown)
         noButton.addTarget(self, action: #selector(noButtonReleased), for: [.touchUpInside, .touchUpOutside])
     }
+    //Mark: - QuestionFactoryDelegate
+    func didRecieveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {
+            return
+        }
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in //Если в замыканиях есть self, нужно использовать weak self. "Ослабленный" self является опционалом.
+            self?.show(quiz: viewModel)
+        }
+        //Это тот же код что в viewDidLoad, но мы поменяли конструкцию с if-let на guard-let.
+        //Конструкция guard-let вынуждает выходить из функции, если условие на выполнено. Поэтому мы использовали if-let. Если вопрос пришел бы как nil, работа метода "didRecieve..." не имела бы смысла.
+    }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        let currentQuestion = questions[currentQuestionIndex]
+        guard let currentQuestion = currentQuestion else {
+            return
+        }
         let givenAnswer = true
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        let currentQuestion = questions[currentQuestionIndex]
+        guard let currentQuestion = currentQuestion else {
+            return
+        }
+        //        let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
@@ -72,12 +67,12 @@ final class MovieQuizViewController: UIViewController {
         let alert = UIAlertController( title: result.title,
                                        message: result.text,
                                        preferredStyle: .alert)
-        let action = UIAlertAction(title: result.buttonText, style: .default, handler: { _ in
+        let action = UIAlertAction(title: result.buttonText, style: .default, handler: { [weak self] _ in
+            guard let self = self else {return}
             self.currentQuestionIndex = 0
             self.correctAnswers = 0
-            let firstQuestionsAgain = self.questions[self.currentQuestionIndex]
-            let viewModel = self.convert(model: firstQuestionsAgain)
-            self.show(quiz: viewModel)
+            //Если мы пишем замыкания внутри класса, то, чтобы обратиться к полям и функциям этого класса из замыкания, Swift требует написать self (показываем, что это не общие параметры замыкания, а именно поля и функции класса)
+            self.questionFactory?.requestNextQuestion()
         })
         alert.addAction(action)
         self.present(alert,animated: true, completion: nil)
@@ -93,7 +88,7 @@ final class MovieQuizViewController: UIViewController {
         return QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
             question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questions.count)")
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -104,23 +99,26 @@ final class MovieQuizViewController: UIViewController {
         imageLabel.layer.borderWidth = 8 // толщина рамки
         imageLabel.layer.borderColor = isCorrect ? UIColor.YPGreen?.cgColor : UIColor.YPRed?.cgColor
         imageLabel.layer.cornerRadius = 20 // радиус скругления углов рамки
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else {return}
             self.showNextQuestionOrResult()
         }
     }
     
     private func showNextQuestionOrResult() {
-        if currentQuestionIndex == questions.count - 1 {
-            let text = "Ваш результат: \(correctAnswers) из 10"
+        if currentQuestionIndex == questionsAmount - 1 {
+            let text = correctAnswers == questionsAmount ?
+            "Поздравляем, Вы ответили на 10 из 10!" :
+            "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
+//            let text = "Ваш результат: \(correctAnswers) из 10"
             let viewModel = QuizResultsViewModel(title: "Этот раунд окончен",
                                                  text: text,
                                                  buttonText: "Сыграть еще раз")
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
-            let nextQuestions = questions[currentQuestionIndex]
-            let viewModel = convert(model: nextQuestions)
-            show(quiz: viewModel)
+            questionFactory?.requestNextQuestion()
         }
         imageLabel.layer.borderWidth = 0
     }
@@ -130,7 +128,8 @@ final class MovieQuizViewController: UIViewController {
             self.yesButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         })
         yesButton.isEnabled = false
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+        guard let self = self else {return}
         self.yesButton.isEnabled = true
         }
     }
@@ -140,7 +139,8 @@ final class MovieQuizViewController: UIViewController {
             self.noButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         })
         noButton.isEnabled = false
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+        guard let self = self else {return}
         self.noButton.isEnabled = true
         }
     }

@@ -15,14 +15,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestionIndex: Int = 0
     private let questionsAmount: Int = 10 //общее колличество вопросов квиза
     private var questionFactory: QuestionFactoryProtocol? //"Фабрика вопросов" к которой наш контроллер будет обращаться за вопросами.
-    //Для использования "Фабрики" - применяем "Композицию". Так мы сами создали экземпляр фабрики, который будем использовать.
+    //Для использования "Фабрики" - применяем "Композицию".
     private var currentQuestion: QuizQuestion? //Текущий вопрос, который видит пользователь
     private var  alertPresenter: AlertPresenterProtocol?
+    private var statisticService: StatisticServices?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        imageLabel.layer.cornerRadius = 20
+        print(NSHomeDirectory())
         questionFactory = QuestionFactory(delegate: self)
+        statisticService = StatisticServicesImplementation()
         questionFactory?.requestNextQuestion()
         alertPresenter = AlertPresenter()
         alertPresenter?.delegate = self
@@ -47,6 +49,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         //Конструкция guard-let вынуждает выходить из функции, если условие на выполнено. Поэтому мы использовали if-let. Если вопрос пришел бы как nil, работа метода "didRecieve..." не имела бы смысла.
     }
     
+    //Mark: Функции
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -94,10 +97,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResult() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = correctAnswers == questionsAmount ?
-            "Поздравляем, Вы ответили на 10 из 10!" :
-            "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
-            let alert = AlertModel(title: "Этот раунд окончен",
+            guard let statisticService  = statisticService else {return}
+            statisticService.store(correct: correctAnswers, total: questionsAmount)
+            
+            let accurancyInPersent = String(format: "%.2f", (statisticService.totalAccurancy * 100)) + "%"
+            let localilizedTime = statisticService.bestGame.date.dateTimeString
+            let bestGameStatistic = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
+            
+            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)\n Колличество сыгранных квизов: \(statisticService.gamesCount)\n Рекорд: \(bestGameStatistic) (\(localilizedTime))\n Средняя точность: \(accurancyInPersent)"
+            
+            let alert = AlertModel(title: "Этот раунд окончен!",
                                         message: text,
                                         buttonText: "Сыграть еще раз") { [weak self]  in
                 guard let self = self else {return}
@@ -111,21 +120,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             questionFactory?.requestNextQuestion()
         }
     }
-    
-//    private func show(quiz result: QuizResultsViewModel) {
-//        let alert = UIAlertController( title: result.title,
-//                                       message: result.text,
-//                                       preferredStyle: .alert)
-//        let action = UIAlertAction(title: result.buttonText, style: .default, handler: { [weak self] _ in
-//            guard let self = self else {return}
-//            self.currentQuestionIndex = 0
-//            self.correctAnswers = 0
-//            //Если мы пишем замыкания внутри класса, то, чтобы обратиться к полям и функциям этого класса из замыкания, Swift требует написать self (показываем, что это не общие параметры замыкания, а именно поля и функции класса)
-//            self.questionFactory?.requestNextQuestion()
-//        })
-//        alert.addAction(action)
-//        self.present(alert,animated: true, completion: nil)
-//    }
     
 //Mark: Обработка нажатия + запрет на повторное нажатие игроком
     @objc private func yesButtonPressed() {

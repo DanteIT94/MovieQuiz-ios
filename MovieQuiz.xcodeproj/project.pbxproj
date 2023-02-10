@@ -136,8 +136,8 @@
 		AD1ABAB02831907B00B3E448 /* MovieQuiz */ = {
 			isa = PBXGroup;
 			children = (
-				9287895229869E8C0074D535 /* Models */,
 				9287894F29866E370074D535 /* Services */,
+				9287895229869E8C0074D535 /* Models */,
 				8F4738322848DE2A005DF65E /* Presentation */,
 				ADF0CF75283FDAA10075F54D /* Helpers */,
 				AD1ABAB12831907B00B3E448 /* AppDelegate.swift */,

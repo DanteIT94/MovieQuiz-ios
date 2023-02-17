@@ -13,15 +13,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private var correctAnswers:Int = 0
     private var currentQuestionIndex: Int = 0
-    private let questionsAmount: Int = 10 //общее колличество вопросов квиза
-    private var questionFactory: QuestionFactoryProtocol? //"Фабрика вопросов" к которой наш контроллер будет обращаться за вопросами.
-    //Для использования "Фабрики" - применяем "Композицию".
-    private var currentQuestion: QuizQuestion? //Текущий вопрос, который видит пользователь
+    ///общее колличество вопросов квиза
+    private let questionsAmount: Int = 10
+    ///"Фабрика вопросов" к которой наш контроллер будет обращаться за вопросами.
+    private var questionFactory: QuestionFactoryProtocol?//Для использования "Фабрики" - применяем "Композицию".
+    //Текущий вопрос, который видит пользователь
+    private var currentQuestion: QuizQuestion?
     private var  alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServices?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        imageLabel.layer.cornerRadius = 20
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statisticService = StatisticServicesImplementation()
         showLoadingIndicator()
@@ -35,21 +38,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.addTarget(self, action: #selector(noButtonPressed), for: .touchDown)
         noButton.addTarget(self, action: #selector(noButtonReleased), for: [.touchUpInside, .touchUpOutside])
     }
-    //Mark: - QuestionFactoryDelegate
+    //MARK: - QuestionFactoryDelegate
     func didRecieveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
         }
         currentQuestion = question
         let viewModel = convert(model: question)
-        DispatchQueue.main.async { [weak self] in //Если в замыканиях есть self, нужно использовать weak self. "Ослабленный" self является опционалом.
+        ///Если в замыканиях есть self, нужно использовать weak self. "Ослабленный" self является опционалом.
+        DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
-        //Это тот же код что в viewDidLoad, но мы поменяли конструкцию с if-let на guard-let.
-        //Конструкция guard-let вынуждает выходить из функции, если условие на выполнено. Поэтому мы использовали if-let. Если вопрос пришел бы как nil, работа метода "didRecieve..." не имела бы смысла.
+        ///Это тот же код что в viewDidLoad, но мы поменяли конструкцию с if-let на guard-let.Конструкция guard-let вынуждает выходить из функции, если условие на выполнено. Поэтому мы использовали if-let. Если вопрос пришел бы как nil, работа метода "didRecieve..." не имела бы смысла.
     }
     
-    //Mark: Private Methods
+    //MARK: Private Methods
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -67,19 +70,33 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func showLoadingIndicator() {
-        activityIndicator?.isHidden = false //Индикатор загрузки не скрыт
-        activityIndicator?.startAnimating()
+        ///Индикатор загрузки не скрыт
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
+    }
+    
+    func hideLoadingIndicator() {
+        activityIndicator.stopAnimating()
+    }
+    
+    func didLoadDataFromServer() {
+        ///Убираем индикатор загрузки
+        hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
     }
     
     private func showNetworkError(message: String) {
-//        hideLoadingIndicator()
         let alert = AlertModel(title: "Ошибка", message: message, buttonText: "Попробуйте ещё раз") {[weak self] in
             guard let self = self else {return}
+            self.questionFactory?.loadData()
             self.currentQuestionIndex = 0
             self.correctAnswers = 0
-            self.questionFactory?.requestNextQuestion()
         }
         alertPresenter?.show(result: alert)
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
     }
     
     private func show(quiz step: QuizStepViewModel){
@@ -99,15 +116,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if isCorrect {
             correctAnswers += 1
         }
-        imageLabel.layer.masksToBounds = true // даём разрешение на рисование рамки
-        imageLabel.layer.borderWidth = 8 // толщина рамки
+        /// даём разрешение на рисование рамки
+        imageLabel.layer.masksToBounds = true
+        /// толщина рамки
+        imageLabel.layer.borderWidth = 8
         imageLabel.layer.borderColor = isCorrect ? UIColor.YPGreen?.cgColor : UIColor.YPRed?.cgColor
-        imageLabel.layer.cornerRadius = 20 // радиус скругления углов рамки
+        /// радиус скругления углов рамки
+        imageLabel.layer.cornerRadius = 20
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else {return}
             self.imageLabel.layer.borderWidth = 0
             self.showNextQuestionOrResult()
+            self.hideLoadingIndicator()
         }
     }
     
@@ -132,18 +153,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             }
             alertPresenter?.show(result: alert)
         } else {
+            showLoadingIndicator()
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
         }
-    }
-    
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true //Убран индикатор загрузки
-        questionFactory?.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
     }
     
 //MARK: Обработка нажатия + запрет на повторное нажатие игроком

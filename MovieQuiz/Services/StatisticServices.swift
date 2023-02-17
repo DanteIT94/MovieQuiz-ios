@@ -42,16 +42,16 @@ final class StatisticServicesImplementation: StatisticServices {
         get {
             userDefaults.double(forKey: Keys.total.rawValue)
         }
-        set{
+        set {
             userDefaults.set(newValue, forKey: Keys.total.rawValue)
         }
     }
     
     var gamesCount: Int {
-        get{
+        get {
             userDefaults.integer(forKey: Keys.gamesCount.rawValue)
         }
-        set{
+        set {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
@@ -59,7 +59,7 @@ final class StatisticServicesImplementation: StatisticServices {
     var bestGame: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
-            let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
+                  let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
                 return .init(correct: 0, total: 0, date: Date())
             }
             return record

@@ -6,8 +6,12 @@
 //
 
 import UIKit
-protocol QuestionFactoryDelegate: AnyObject { //Создаем протокол, который будем использовать в фабрике как "Делегата". Используем AnyObject, чтобы ограничить наш протокол КЛАССАМИ - в дальнейшем это пригодиться при создании слабых ссылок.
-    func didRecieveNextQuestion(question: QuizQuestion?) //объявляем метод, который должен быть у делегата фабрики
-    func didLoadDataFromServer() //Сообщение об успешной загрузке
-    func didFailToLoadData(with error: Error)//Сообщение об 
+///Создаем протокол, который будем использовать в фабрике как "Делегата". Используем AnyObject, чтобы ограничить наш протокол КЛАССАМИ - в дальнейшем это пригодиться при создании слабых ссылок.
+protocol QuestionFactoryDelegate: AnyObject {
+    ///объявляем метод, который должен быть у делегата фабрики
+    func didRecieveNextQuestion(question: QuizQuestion?)
+    ///Сообщение об успешной загрузке
+    func didLoadDataFromServer()
+    ///Сообщение об ошибке
+    func didFailToLoadData(with error: Error)
 }

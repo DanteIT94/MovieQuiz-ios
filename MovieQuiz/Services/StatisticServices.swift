@@ -55,7 +55,7 @@ final class StatisticServicesImplementation: StatisticServices {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
-    
+    ///Пытаемся записать результат "Лучшей игры"
     var bestGame: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
@@ -72,7 +72,7 @@ final class StatisticServicesImplementation: StatisticServices {
             userDefaults.set(data, forKey: Keys.bestGame.rawValue)
         }
     }
-    
+    ///"Складируем" результат 
     func store(correct count: Int, total amount: Int) {
         let newGame = GameRecord(correct: count, total: amount, date: Date())
         

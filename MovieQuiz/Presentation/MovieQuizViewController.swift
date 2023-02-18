@@ -17,7 +17,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private let questionsAmount: Int = 10
     ///"Фабрика вопросов" к которой наш контроллер будет обращаться за вопросами.
     private var questionFactory: QuestionFactoryProtocol?//Для использования "Фабрики" - применяем "Композицию".
-    //Текущий вопрос, который видит пользователь
+    ///Текущий вопрос, который видит пользователь
     private var currentQuestion: QuizQuestion?
     private var  alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServices?
@@ -103,6 +103,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         counterLabel.text = step.questionNumber
         imageLabel.image = step.image
         textLabel.text = step.question
+        self.hideLoadingIndicator()
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -128,7 +129,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             guard let self = self else {return}
             self.imageLabel.layer.borderWidth = 0
             self.showNextQuestionOrResult()
-            self.hideLoadingIndicator()
         }
     }
     

@@ -16,34 +16,57 @@ class QuestionFactory: QuestionFactoryProtocol {
         self.delegate = delegate
     }
     
+    enum CustomError: LocalizedError {
+        case failedLoadImage
+       
+         var errorDescription: String? {
+            switch self {
+            case .failedLoadImage:
+                return NSLocalizedString(
+                    "Не загрузился постер",
+                    comment: "Failed to load image")
+            }
+        }
+    }
+        
     func loadData() {
         moviesLoader.loadMovies {[weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else {return}
                 switch result {
                 case .success(let mostPopularMovies):
-                    self.movies = mostPopularMovies.items // сохраняем фильм в переменную
-                    self.delegate?.didLoadDataFromServer() //Проверка, загрузились ли данные
+                    /// Cохраняем фильм в переменную
+                    self.movies = mostPopularMovies.items
+                    ///Проверка, загрузились ли данные
+                    self.delegate?.didLoadDataFromServer()
                 case .failure(let error):
-                    self.delegate?.didFailToLoadData(with: error)//Сообщаем об ошибке нащему MovieQuizController
+                    ///Сообщаем об ошибке нащему MovieQuizController
+                    self.delegate?.didFailToLoadData(with: error)
                 }
             }
         }
     }
     
+    
     func requestNextQuestion () {
         DispatchQueue.global().async { [weak self] in
             guard let self = self else { return }
+            ///Выбираем индекс вопроса из массива movies + Вопрос должен быть случайным (метод ".randomElement")
+            ///Почему мы используем "Полуоткрытый оператор"? так как ИНДЕКС ПОСЛЕДНЕГО ЭЛЕМЕНТА МАССИВА на 1 единицу меньше РАЗМЕРА МАССИВА, последний вопрос (в массиве из 10 вопросов) имеет индекс [9]. Мы просто исключаем последнее число.
             let index = (0..<self.movies.count).randomElement() ?? 0
-            //Выбираем индекс вопроса из массива movies + Вопрос должен быть случайным (метод ".randomElement")
-            //Почему мы используем "Полуоткрытый оператор"? так как ИНДЕКС ПОСЛЕДНЕГО ЭЛЕМЕНТА МАССИВА на 1 единицу меньше РАЗМЕРА МАССИВА, последний вопрос (в массиве из 10 вопросов) имеет индекс [9]. Мы просто исключаем последнее число.
-            guard let movie = self.movies[safe: index] else { return } //После того как мы получили случайный индекс - возьмем элемент из массива по этому индексу, но используем для этого "САБСКРИПТ". (Сабскрипт Extension-Array)
-            var imageData = Data()//по дефолту - пустые данные
-            
+            ///После того как мы получили случайный индекс - возьмем элемент из массива по этому индексу, но используем для этого "САБСКРИПТ". (Сабскрипт Extension-Array)
+            guard let movie = self.movies[safe: index] else { return }
+            ///по дефолту - пустые данные
+            var imageData = Data()
+    
             do {
                 imageData = try Data(contentsOf: movie.resizedImageURL)
             } catch {
-                print("Failed to load image")
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else {return}
+                    self.delegate?.didFailToLoadData(with: CustomError.failedLoadImage)
+                }
+                return
             }
             
             let rating = Float(movie.rating) ?? 0
@@ -73,3 +96,5 @@ class QuestionFactory: QuestionFactoryProtocol {
         }
     }
 }
+
+

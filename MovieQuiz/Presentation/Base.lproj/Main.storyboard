@@ -9,6 +9,9 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <customFonts key="customFonts">
+        <array key="YS Display-Bold.ttf">
+            <string>YSDisplay-Bold</string>
+        </array>
         <array key="YS Display-Medium.ttf">
             <string>YSDisplay-Medium</string>
         </array>
@@ -44,7 +47,7 @@
                                     </stackView>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Wqq-jW-feE" userLabel="Preview Image">
                                         <rect key="frame" x="0.0" y="43.333333333333343" width="335" height="502.66666666666663"/>
-                                        <color key="backgroundColor" name="YPWhite"/>
+                                        <color key="backgroundColor" name="YPBlack"/>
                                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="Wqq-jW-feE" secondAttribute="height" multiplier="2:3" id="dhn-ua-pLm"/>
@@ -53,7 +56,7 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ARa-8x-gNd">
                                         <rect key="frame" x="0.0" y="566" width="335" height="79.666666666666629"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Рейтинг данного фильма меньше, чем 5?" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EOw-3x-B3h" userLabel="Question Label ">
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Что-то пошло не так :(" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EOw-3x-B3h" userLabel="Question Label ">
                                                 <rect key="frame" x="42" y="12.999999999999996" width="251" height="53.666666666666657"/>
                                                 <color key="backgroundColor" name="YPBlack"/>
                                                 <fontDescription key="fontDescription" name="YSDisplay-Bold" family="YS Display" pointSize="23"/>
@@ -114,16 +117,23 @@
                                 </subviews>
                                 <viewLayoutGuide key="safeArea" id="FPW-9g-P5q"/>
                             </stackView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="hBG-cb-DIm">
+                                <rect key="frame" x="177.66666666666666" y="396" width="20" height="20"/>
+                                <color key="color" name="YPWhite"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YPBlack"/>
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="6Ch-tQ-VvA" secondAttribute="trailing" constant="20" id="0IY-Yc-KYp"/>
+                            <constraint firstItem="hBG-cb-DIm" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="7qm-gq-Xx2"/>
                             <constraint firstItem="6Ch-tQ-VvA" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="ahh-bw-nq8"/>
                             <constraint firstItem="6Ch-tQ-VvA" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" constant="10" id="e5G-Ew-SiZ"/>
+                            <constraint firstItem="hBG-cb-DIm" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="yiS-IU-xnr"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="hBG-cb-DIm" id="UWp-j7-XFf"/>
                         <outlet property="counterLabel" destination="eam-aK-KXF" id="wXR-i4-MX9"/>
                         <outlet property="imageLabel" destination="Wqq-jW-feE" id="Kow-fu-hJD"/>
                         <outlet property="noButton" destination="9C7-sw-NVI" id="uYG-eh-uGC"/>

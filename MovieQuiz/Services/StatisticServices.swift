@@ -42,24 +42,24 @@ final class StatisticServicesImplementation: StatisticServices {
         get {
             userDefaults.double(forKey: Keys.total.rawValue)
         }
-        set{
+        set {
             userDefaults.set(newValue, forKey: Keys.total.rawValue)
         }
     }
     
     var gamesCount: Int {
-        get{
+        get {
             userDefaults.integer(forKey: Keys.gamesCount.rawValue)
         }
-        set{
+        set {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
-    
+    ///Пытаемся записать результат "Лучшей игры"
     var bestGame: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
-            let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
+                  let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
                 return .init(correct: 0, total: 0, date: Date())
             }
             return record
@@ -72,7 +72,7 @@ final class StatisticServicesImplementation: StatisticServices {
             userDefaults.set(data, forKey: Keys.bestGame.rawValue)
         }
     }
-    
+    ///"Складируем" результат 
     func store(correct count: Int, total amount: Int) {
         let newGame = GameRecord(correct: count, total: amount, date: Date())
         

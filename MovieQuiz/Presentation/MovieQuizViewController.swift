@@ -27,7 +27,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         super.viewDidLoad()
         imageLabel.layer.cornerRadius = 20
         noButton.titleLabel?.font = UIFont (name: "YSDisplay-Medium", size: 20)
-        yesButton.titleLabel?.font = UIFont (name: "YSDisplay-Medium", size: 20) 
+        yesButton.titleLabel?.font = UIFont (name: "YSDisplay-Medium", size: 20)
+        presenter.viewController = self
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statisticService = StatisticServicesImplementation()
         showLoadingIndicator()
@@ -57,19 +58,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     //MARK: Private Methods
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = true
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = false
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
     
     private func showLoadingIndicator() {
@@ -116,7 +111,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 //            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
 //    }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         if isCorrect {
             correctAnswers += 1
         }

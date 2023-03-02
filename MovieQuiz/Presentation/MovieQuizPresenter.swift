@@ -12,8 +12,26 @@ final class MovieQuizPresenter {
     private var currentQuestionIndex: Int = 0
     ///общее колличество вопросов квиза
     let questionsAmount: Int = 10
+    var currentQuestion: QuizQuestion?
+    weak var viewController: MovieQuizViewController?
     
   // MARK: methods
+    func yesButtonClicked() {
+        guard let currentQuestion = currentQuestion else {
+            return
+        }
+        let givenAnswer = true
+        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+    }
+    
+   func noButtonClicked() {
+        guard let currentQuestion = currentQuestion else {
+            return
+        }
+        let givenAnswer = false
+       viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+    }
+    
     func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),

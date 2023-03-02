@@ -44,26 +44,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     //MARK: - QuestionFactoryDelegate
     func didRecieveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
-            return
-        }
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        ///Если в замыканиях есть self, нужно использовать weak self. "Ослабленный" self является опционалом.
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
+        presenter.didRecieveNextQuestion(question: question)
         }
         ///Это тот же код что в viewDidLoad, но мы поменяли конструкцию с if-let на guard-let.Конструкция guard-let вынуждает выходить из функции, если условие на выполнено. Поэтому мы использовали if-let. Если вопрос пришел бы как nil, работа метода "didRecieve..." не имела бы смысла.
-    }
     
     //MARK: Private Methods
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
     }
     
@@ -97,19 +87,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showNetworkError(message: error.localizedDescription)
     }
     
-    private func show(quiz step: QuizStepViewModel){
+    func show(quiz step: QuizStepViewModel){
         counterLabel.text = step.questionNumber
         imageLabel.image = step.image
         textLabel.text = step.question
         self.hideLoadingIndicator()
     }
     
-//    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-//        return QuizStepViewModel(
-//            image: UIImage(data: model.image) ?? UIImage(),
-//            question: model.text,
-//            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-//    }
     
     func showAnswerResult(isCorrect: Bool) {
         if isCorrect {
@@ -126,35 +110,58 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else {return}
             self.imageLabel.layer.borderWidth = 0
-            self.showNextQuestionOrResult()
+            self.presenter.correctAnswers = self.correctAnswers
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionsOrResult()
         }
     }
     
-    private func showNextQuestionOrResult() {
-        if presenter.isLastQuestion() {
-            guard let statisticService  = statisticService else {return}
-            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
-            
-            let accurancyInPersent = String(format: "%.2f", (statisticService.totalAccurancy * 100)) + "%"
-            let localilizedTime = statisticService.bestGame.date.dateTimeString
-            let bestGameStatistic = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
-            
-            let text = "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)\n Колличество сыгранных квизов: \(statisticService.gamesCount)\n Рекорд: \(bestGameStatistic) (\(localilizedTime))\n Средняя точность: \(accurancyInPersent)"
-            
-            let alert = AlertModel(title: "Этот раунд окончен!",
-                                        message: text,
-                                        buttonText: "Сыграть еще раз") { [weak self]  in
-                guard let self = self else {return}
-                self.presenter.resetQustionIndex()
-                self.correctAnswers = 0
-                self.questionFactory?.requestNextQuestion()
-            }
-            alertPresenter?.show(result: alert)
-        } else {
-            showLoadingIndicator()
-            presenter.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
+//    private func showNextQuestionOrResult() {
+//        if presenter.isLastQuestion() {
+//            guard let statisticService  = statisticService else {return}
+//            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
+//
+//            let accurancyInPersent = String(format: "%.2f", (statisticService.totalAccurancy * 100)) + "%"
+//            let localilizedTime = statisticService.bestGame.date.dateTimeString
+//            let bestGameStatistic = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
+//
+//            let text = "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)\n Колличество сыгранных квизов: \(statisticService.gamesCount)\n Рекорд: \(bestGameStatistic) (\(localilizedTime))\n Средняя точность: \(accurancyInPersent)"
+//
+//            let alert = AlertModel(title: "Этот раунд окончен!",
+//                                        message: text,
+//                                        buttonText: "Сыграть еще раз") { [weak self]  in
+//                guard let self = self else {return}
+//                self.presenter.resetQustionIndex()
+//                self.correctAnswers = 0
+//                self.questionFactory?.requestNextQuestion()
+//            }
+//            alertPresenter?.show(result: alert)
+//        } else {
+//            showLoadingIndicator()
+//            presenter.switchToNextQuestion()
+//            questionFactory?.requestNextQuestion()
+//        }
+//    }
+    
+    func show(quiz result: QuizResultsViewModel) {
+        guard let statisticService  = statisticService else {return}
+        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
+        
+        let accurancyInPersent = String(format: "%.2f", (statisticService.totalAccurancy * 100)) + "%"
+        let localilizedTime = statisticService.bestGame.date.dateTimeString
+        let bestGameStatistic = "\(statisticService.bestGame.correct)/\(statisticService.bestGame.total)"
+
+        let text = "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)\n Колличество сыгранных квизов: \(statisticService.gamesCount)\n Рекорд: \(bestGameStatistic) (\(localilizedTime))\n Средняя точность: \(accurancyInPersent)"
+        
+        let alert = AlertModel(title: "Этот раунд окончен!",
+                                    message: text,
+                                    buttonText: "Сыграть еще раз") { [weak self]  in
+            guard let self = self else {return}
+            self.presenter.resetQustionIndex()
+            self.correctAnswers = 0
+            self.questionFactory?.requestNextQuestion()
         }
+        alertPresenter?.show(result: alert)
     }
     
 //MARK: Обработка нажатия + запрет на повторное нажатие игроком

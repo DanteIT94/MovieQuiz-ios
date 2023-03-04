@@ -30,26 +30,31 @@ final class MovieQuizUITests: XCTestCase {
         app = nil
     }
     
-//    func testYesButton() {
-//        let indexLabel = app.staticTexts["Index"]
-//        sleep(2)
-//        let firstPoster = app.images["Poster"] //находим первоначальный постер
-//        let firstPosterData = firstPoster.screenshot().pngRepresentation
-//        app.buttons["Yes"].tap() //находим кнопку "Да" и нажимаем ее
-//        sleep(2)
-//        let secondPoster = app.images["Poster"]
-//        let secondPosterData = secondPoster.screenshot().pngRepresentation
-//        XCTAssertEqual(indexLabel.label, "2/10")
-//        XCTAssertNotEqual(firstPosterData, secondPosterData) //Проверяем, что постеры разные
-//    }
-//    func testNoButton() {
-//        let firstPoster = app.images["Poster"] //находим первоначальный постер
-//                let firstPosterData = firstPoster.screenshot().pngRepresentation
-//                app.buttons["No"].tap()
-//        let secondPoster = app.images["Poster"]
-//                let secondPosterData = secondPoster.screenshot().pngRepresentation
-//                XCTAssertNotEqual(firstPosterData, secondPosterData) //Проверяем, что постеры разные
-//    }
+    func testYesButton() {
+        let indexLabel = app.staticTexts["Index"]
+        sleep(2)
+        let firstPoster = app.images["Poster"] //находим первоначальный постер
+        let firstPosterData = firstPoster.screenshot().pngRepresentation
+        app.buttons["Yes"].tap() //находим кнопку "Да" и нажимаем ее
+        sleep(2)
+        let secondPoster = app.images["Poster"]
+        let secondPosterData = secondPoster.screenshot().pngRepresentation
+        XCTAssertEqual(indexLabel.label, "2/10")
+        XCTAssertNotEqual(firstPosterData, secondPosterData) //Проверяем, что постеры разные
+    }
+    
+    func testNoButton() {
+        let indexLabel = app.staticTexts["Index"]
+        let firstPoster = app.images["Poster"] //находим первоначальный постер
+        let firstPosterData = firstPoster.screenshot().pngRepresentation
+        app.buttons["No"].tap()
+        sleep(2)
+        let secondPoster = app.images["Poster"]
+                let secondPosterData = secondPoster.screenshot().pngRepresentation
+                XCTAssertEqual(indexLabel.label, "2/10")
+                XCTAssertNotEqual(firstPosterData, secondPosterData) //Проверяем, что постеры разные
+    }
+    
     func testAlertEnd() {
         sleep(1)
         for _ in 1...10 {
@@ -58,11 +63,23 @@ final class MovieQuizUITests: XCTestCase {
         }
         sleep(2)
         let finalAlert = app.alerts["Game results"]
-        
         XCTAssertTrue(finalAlert.exists)
         XCTAssertTrue(finalAlert.label == "Этот раунд окончен!")
         XCTAssertTrue(finalAlert.buttons.firstMatch.label == "Сыграть еще раз")
-        
+    }
+    func testAlertOffAndNewGame () {
+        sleep(1)
+        let indexLabel = app.staticTexts["Index"]
+        for _ in 1...10 {
+            app.buttons["Yes"].tap()
+            sleep(2)
+        }
+            sleep(2)
+            let finalAlert = app.alerts["Game results"]
+            app/*@START_MENU_TOKEN@*/.alerts["Game results"]/*[[".alerts[\"Этот раунд окончен!\"]",".alerts[\"Game results\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.scrollViews.otherElements.buttons["Сыграть еще раз"].tap()
+            sleep(1)
+            XCTAssertFalse(finalAlert.exists)
+            XCTAssertEqual(indexLabel.label, "1/10")
     }
 //    func testExample() throws {
 //        // UI tests must launch the application that they test.

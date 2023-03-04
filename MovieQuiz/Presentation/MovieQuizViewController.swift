@@ -1,12 +1,17 @@
 import UIKit
 
+
 protocol MovieQuizViewControllerProtocol: AnyObject {
     func show(quiz step: QuizStepViewModel)
     func show(quiz result: QuizResultsViewModel)
-    
+    func highlightImageBorder(isCorrectAnswer: Bool)
+    func showLoadingIndicator()
+    func hideLoadingIndicator()
+    func showNetworkError(message: String)
+    func wrongAnswer()
 }
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
     //MARK: Private Properties
     @IBOutlet private weak var yesButton: UIButton!
@@ -19,6 +24,7 @@ final class MovieQuizViewController: UIViewController {
     private var presenter: MovieQuizPresenter!
     private var  alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServices?
+    let feedbackGenerator = UINotificationFeedbackGenerator()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -89,11 +95,11 @@ final class MovieQuizViewController: UIViewController {
         alertPresenter?.show(result: alert)
     }
     
-    func highlightImageBorder(isCorrect: Bool) {
+    func highlightImageBorder(isCorrectAnswer: Bool) {
         imageLabel.layer.masksToBounds = true
         /// толщина рамки
         imageLabel.layer.borderWidth = 8
-        imageLabel.layer.borderColor = isCorrect ? UIColor.YPGreen?.cgColor : UIColor.YPRed?.cgColor
+        imageLabel.layer.borderColor = isCorrectAnswer ? UIColor.YPGreen?.cgColor : UIColor.YPRed?.cgColor
         /// радиус скругления углов рамки
         imageLabel.layer.cornerRadius = 20
     }
@@ -135,6 +141,10 @@ final class MovieQuizViewController: UIViewController {
         UIView.animate(withDuration: 0.1, animations: {
             self.noButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         })
+    }
+    
+    func wrongAnswer() {
+        feedbackGenerator.notificationOccurred(.error)
     }
 }
 

@@ -7,19 +7,21 @@
 
 import UIKit
 
+
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     //MARK: Properties
     private let statisticService: StatisticServices!
     private var questionFactory: QuestionFactoryProtocol?
-    weak var viewController: MovieQuizViewController?
+    weak var viewController: MovieQuizViewControllerProtocol?
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticServicesImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
+        
     }
     
     private var currentQuestionIndex: Int = 0
@@ -51,7 +53,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
-    func proceedToNextQuestionOrResult () {
+    private func proceedToNextQuestionOrResult () {
         if self.isLastQuestion() {
             let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
             
@@ -59,7 +61,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть еще раз")
-            viewController?.show(quiz: viewModel)
+                viewController?.show(quiz: viewModel)
         } else {
             self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
@@ -97,12 +99,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func didAnswer(isCorrectAnswer: Bool) {
         if isCorrectAnswer {
             correctAnswers += 1
+        } else {
+            viewController?.wrongAnswer()
         }
     }
     
-    func proceedWithAnswer(isCorrect: Bool) {
+    private func proceedWithAnswer(isCorrect: Bool) {
         didAnswer(isCorrectAnswer: isCorrect)
-        viewController?.highlightImageBorder(isCorrect: isCorrect)
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else {return}

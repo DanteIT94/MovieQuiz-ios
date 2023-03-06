@@ -18,6 +18,7 @@ final class AlertPresenter: AlertPresenterProtocol {
         let alert = UIAlertController( title: result.title,
                                        message: result.message,
                                        preferredStyle: .alert)
+        alert.view.accessibilityIdentifier = "Game results" //ДЛЯ ТЕСТОВ
         let action = UIAlertAction(title: result.buttonText, style: .default) { _ in
             result.completion()
         }

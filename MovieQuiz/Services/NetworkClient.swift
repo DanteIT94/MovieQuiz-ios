@@ -6,9 +6,12 @@
 //
 
 import UIKit
+protocol NetworkRouting {
+    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+}
 
-//Загрузка данных из URL
-struct NetworkClient {
+///Загрузка данных из URL
+struct NetworkClient: NetworkRouting {
     private enum NetworkError: Error {
         case codeError
     }
@@ -16,17 +19,17 @@ struct NetworkClient {
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         let request = URLRequest(url: url) //создаем запрос в url
         let task = URLSession.shared.dataTask(with: request) {data, response, error in
-            // Проверка на ошибку
+            /// Проверка на ошибку
             if let error = error {
                 handler(.failure(error))
                 return
             }
-            // Проверка на успешность получения кода ответа
+            /// Проверка на успешность получения кода ответа
             if let response = response as? HTTPURLResponse, response.statusCode < 200 || response.statusCode >= 300 {
                 handler(.failure(NetworkError.codeError))
                 return
             }
-            //Возвращение данных
+            ///Возвращение данных
             guard let data = data else {return}
             handler(.success(data))
         }

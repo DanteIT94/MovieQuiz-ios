@@ -18,7 +18,7 @@ class QuestionFactory: QuestionFactoryProtocol {
     
     enum CustomError: LocalizedError {
         case failedLoadImage
-       
+    
          var errorDescription: String? {
             switch self {
             case .failedLoadImage:

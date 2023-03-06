@@ -9,9 +9,10 @@ protocol MovieQuizViewControllerProtocol: AnyObject {
     func hideLoadingIndicator()
     func showNetworkError(message: String)
     func wrongAnswer()
+    func updateButtonTitle(withTime time: Int)
 }
 
-final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
+final class MovieQuizViewController: UIViewController {
     
     //MARK: Private Properties
     @IBOutlet private weak var yesButton: UIButton!
@@ -24,18 +25,14 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     private var presenter: MovieQuizPresenter!
     private var  alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServices?
-    let feedbackGenerator = UINotificationFeedbackGenerator()
+    private let feedbackGenerator = UINotificationFeedbackGenerator()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         imageLabel.layer.cornerRadius = 20
-        ///УСТАНОВКА ШРИФТОВ (по default - не работает)
-        noButton.titleLabel?.font = UIFont (name: "YSDisplay-Medium", size: 20)
-        yesButton.titleLabel?.font = UIFont (name: "YSDisplay-Medium", size: 20)
-        
         presenter = MovieQuizPresenter(viewController: self)
-        
+        presenter?.startTimer()
         ///Мы вынесли Alert в отдельный модуль
         alertPresenter = AlertPresenter()
         alertPresenter?.delegate = self
@@ -49,7 +46,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         noButton.addTarget(self, action: #selector(noButtonReleased), for: [.touchUpInside, .touchUpOutside])
     }
     
-    //MARK: Private Methods
+    //MARK: Private Methods for buttons
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         presenter.yesButtonClicked()
     }
@@ -57,6 +54,50 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
     }
+    
+    //MARK: Обработка нажатия + запрет на повторное нажатие игроком
+    @objc private func yesButtonPressed() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.yesButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        })
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+        presenter?.stopTimer()
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+            guard let self = self else {return}
+            self.yesButton.isEnabled = true
+            self.noButton.isEnabled = true
+        }
+    }
+    
+    @objc private func noButtonPressed() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.noButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        })
+        noButton.isEnabled = false
+        yesButton.isEnabled = false
+        presenter?.stopTimer()
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+            guard let self = self else {return}
+            self.noButton.isEnabled = true
+            self.yesButton.isEnabled = true
+        }
+    }
+    
+    @objc private func yesButtonReleased() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.yesButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        })
+    }
+    
+    @objc private func noButtonReleased() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.noButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        })
+    }
+}
+
+extension MovieQuizViewController: MovieQuizViewControllerProtocol {
     
     func showLoadingIndicator() {
         ///Индикатор загрузки не скрыт
@@ -85,7 +126,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     
     func show(quiz result: QuizResultsViewModel) {
-        let text = presenter.makeResultMessage()
+        let text = presenter.resultMessage
         let alert = AlertModel(title: "Этот раунд окончен!",
                                message: text,
                                buttonText: "Сыграть еще раз") { [weak self]  in
@@ -103,48 +144,14 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         /// радиус скругления углов рамки
         imageLabel.layer.cornerRadius = 20
     }
-    
-    //MARK: Обработка нажатия + запрет на повторное нажатие игроком
-    @objc private func yesButtonPressed() {
-        UIView.animate(withDuration: 0.1, animations: {
-            self.yesButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        })
-        yesButton.isEnabled = false
-        noButton.isEnabled = false
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-            guard let self = self else {return}
-            self.yesButton.isEnabled = true
-            self.noButton.isEnabled = true
-        }
-    }
-    
-    @objc private func noButtonPressed() {
-        UIView.animate(withDuration: 0.1, animations: {
-            self.noButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        })
-        noButton.isEnabled = false
-        yesButton.isEnabled = false
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-            guard let self = self else {return}
-            self.noButton.isEnabled = true
-            self.yesButton.isEnabled = true
-        }
-    }
-    
-    @objc private func yesButtonReleased() {
-        UIView.animate(withDuration: 0.1, animations: {
-            self.yesButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        })
-    }
-    
-    @objc private func noButtonReleased() {
-        UIView.animate(withDuration: 0.1, animations: {
-            self.noButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        })
-    }
-    
     func wrongAnswer() {
         feedbackGenerator.notificationOccurred(.error)
     }
+    
+    func updateButtonTitle(withTime time: Int) {
+        let yesButtonTitle = "Да (\(time))"
+        let noButtonTitle = "Нет (\(time))"
+        yesButton.setTitle(yesButtonTitle, for: .normal)
+        noButton.setTitle(noButtonTitle, for: .normal)
+    }
 }
-

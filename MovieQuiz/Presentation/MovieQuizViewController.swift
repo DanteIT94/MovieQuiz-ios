@@ -26,6 +26,7 @@ final class MovieQuizViewController: UIViewController {
     private var  alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServices?
     private let feedbackGenerator = UINotificationFeedbackGenerator()
+    var moviesLoader = MoviesLoader.shared
     
     // MARK: - Lifecycle
     override func viewDidLoad() {

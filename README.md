@@ -10,7 +10,7 @@ MovieQuiz - это приложение с квизами о фильмах из
 
 [Шрифты](https://code.s3.yandex.net/Mobile/iOS/Fonts/MovieQuizFonts.zip)
 
-![ScreenShot](MovieQuizApp/ProfileEpicScreenCast.gif)
+![ScreenShot](https://github.com/DanteIT94/MovieQuizApp/blob/project_sprint_3_start/ProfileEpicScreenCast.gif)
 
 ## **Описание приложения**
 

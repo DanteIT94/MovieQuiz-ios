@@ -1,6 +1,7 @@
 ## **MovieQuiz**
 
 MovieQuiz - это приложение с квизами о фильмах из топ-250 рейтинга и самых популярных фильмах по версии IMDb.
+UPDATE: Комментарий API-держателя: "Unfortunately, due to abuse by some users, the free plan (test account) will be removed from the site from July 1, 2023."
 
 ## **Ссылки**
 
